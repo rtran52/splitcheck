@@ -1,101 +1,109 @@
-import Image from "next/image";
+import Link from 'next/link'
 
-export default function Home() {
+const steps = [
+  {
+    emoji: '📸',
+    title: 'Snap your receipt',
+    description: 'Point your camera at any receipt. Our AI reads every item instantly.',
+  },
+  {
+    emoji: '👆',
+    title: 'Tap who had what',
+    description: 'Assign each item to the right person. Split shared dishes too.',
+  },
+  {
+    emoji: '💸',
+    title: 'Send payment links',
+    description: 'Everyone gets their exact amount with one-tap Venmo and CashApp links.',
+  },
+]
+
+const features = [
+  {
+    title: 'No app needed',
+    description: 'Friends join via a link. Nothing to download.',
+  },
+  {
+    title: 'AI receipt reading',
+    description: 'Works on blurry, crumpled, even foreign receipts.',
+  },
+  {
+    title: 'Birthday mode',
+    description: "Honor a guest — their share splits across everyone else.",
+  },
+  {
+    title: 'Debt nudges',
+    description: "Forgot to pay? We'll remind them so you don't have to.",
+  },
+]
+
+export default function HomePage() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <main className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="flex items-center gap-2 px-6 py-5">
+        <h1 className="text-xl font-bold text-black">SplitCheck</h1>
+        <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">
+          Free
+        </span>
+      </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Hero */}
+      <section className="px-6 py-12 text-center">
+        <h2 className="text-4xl font-bold tracking-tight text-black sm:text-5xl">
+          Split any bill in 30 seconds
+        </h2>
+        <p className="mx-auto mt-4 max-w-md text-lg text-gray-500">
+          Snap a receipt. Assign items. Everyone gets a payment link. No app needed.
+        </p>
+        <Link
+          href="/split/new"
+          className="mt-8 inline-block rounded-full bg-black px-8 py-3.5 text-base font-semibold text-white transition-opacity hover:opacity-80"
+        >
+          Scan a Receipt →
+        </Link>
+        <p className="mt-3 text-sm text-gray-400">No account required</p>
+      </section>
+
+      {/* How it works */}
+      <section className="px-6 py-12">
+        <h3 className="mb-8 text-center text-2xl font-bold text-black">How it works</h3>
+        <div className="mx-auto grid max-w-3xl gap-8 sm:grid-cols-3">
+          {steps.map((step, i) => (
+            <div key={i} className="text-center">
+              <div className="text-4xl">{step.emoji}</div>
+              <h4 className="mt-3 text-lg font-semibold text-black">{step.title}</h4>
+              <p className="mt-1 text-sm text-gray-500">{step.description}</p>
+            </div>
+          ))}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      </section>
+
+      {/* Features */}
+      <section className="px-6 py-12">
+        <h3 className="mb-8 text-center text-2xl font-bold text-black">Why SplitCheck</h3>
+        <div className="mx-auto grid max-w-lg gap-4 sm:max-w-2xl sm:grid-cols-2">
+          {features.map((feature, i) => (
+            <div key={i} className="rounded-xl bg-gray-50 p-5">
+              <h4 className="font-semibold text-black">{feature.title}</h4>
+              <p className="mt-1 text-sm text-gray-500">{feature.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Footer CTA */}
+      <section className="px-6 py-16 text-center">
+        <Link
+          href="/split/new"
+          className="inline-block rounded-full bg-black px-8 py-3.5 text-base font-semibold text-white transition-opacity hover:opacity-80"
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+          Split a bill now →
+        </Link>
+        <p className="mt-4 text-sm text-gray-400">
+          Made with ❤️ for people who hate doing math at the table
+        </p>
+      </section>
+    </main>
+  )
 }
