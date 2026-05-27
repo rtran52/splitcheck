@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, saveSplitToHistory } from '@/lib/utils'
 import { ParsedReceipt } from '@/lib/types'
 
 type PageState = 'idle' | 'loading' | 'review' | 'error'
@@ -124,6 +124,15 @@ export default function NewSplitPage() {
       if (!res.ok) throw new Error('Failed to create split')
 
       const data = await res.json()
+      saveSplitToHistory({
+        id: data.split_id,
+        share_code: data.share_code,
+        restaurant_name: restaurantName,
+        total: calculatedTotal,
+        currency: currency,
+        created_at: new Date().toISOString(),
+        person_count: 0,
+      })
       router.push(`/s/${data.split_id}`)
     } catch {
       alert('Failed to create split. Please try again.')
@@ -135,9 +144,12 @@ export default function NewSplitPage() {
   if (state === 'idle') {
     return (
       <main className="min-h-screen bg-white px-6 py-5">
-        <Link href="/" className="inline-block text-2xl">
-          ←
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link href="/" className="text-2xl">←</Link>
+          <Link href="/history" className="text-sm text-gray-400 transition-colors hover:text-black">
+            Past splits →
+          </Link>
+        </div>
 
         <div className="mt-6">
           <h1 className="text-2xl font-bold text-black">Scan your receipt</h1>

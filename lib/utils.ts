@@ -55,3 +55,36 @@ export function calculatePersonTotals(
     return { ...t, taxShare, tipShare, grandTotal: t.itemsTotal + taxShare + tipShare }
   })
 }
+
+export type SavedSplit = {
+  id: string
+  share_code: string
+  restaurant_name: string | null
+  total: number
+  currency: string
+  created_at: string
+  person_count: number
+}
+
+export function saveSplitToHistory(split: SavedSplit): void {
+  if (typeof window === 'undefined') return
+  const existing = getSplitHistory()
+  const updated = [split, ...existing.filter((s) => s.id !== split.id)]
+  localStorage.setItem('splitcheck_history', JSON.stringify(updated.slice(0, 20)))
+}
+
+export function getSplitHistory(): SavedSplit[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem('splitcheck_history')
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+export function deleteSplitFromHistory(id: string): void {
+  if (typeof window === 'undefined') return
+  const existing = getSplitHistory()
+  localStorage.setItem('splitcheck_history', JSON.stringify(existing.filter((s) => s.id !== id)))
+}

@@ -41,11 +41,16 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-white">
       {/* Header */}
-      <header className="flex items-center gap-2 px-6 py-5">
-        <h1 className="text-xl font-bold text-black">SplitCheck</h1>
-        <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">
-          Free
-        </span>
+      <header className="flex items-center justify-between px-6 py-5">
+        <div className="flex items-center gap-2">
+          <h1 className="text-xl font-bold text-black">SplitCheck</h1>
+          <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">
+            Free
+          </span>
+        </div>
+        <Link href="/history" className="text-sm text-gray-400 transition-colors hover:text-black">
+          View past splits →
+        </Link>
       </header>
 
       {/* Hero */}

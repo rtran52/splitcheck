@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
-import { formatCurrency, getAvatarColor, getInitials, calculatePersonTotals } from '@/lib/utils'
+import { formatCurrency, getAvatarColor, getInitials, calculatePersonTotals, saveSplitToHistory } from '@/lib/utils'
 import { Split, ReceiptItem, Person, Assignment } from '@/lib/types'
 
 export default function AssignPage() {
@@ -39,6 +39,15 @@ export default function AssignPage() {
         setItems(data.items)
         setPeople(data.people)
         setAssignments(data.assignments)
+        saveSplitToHistory({
+          id: data.split.id,
+          share_code: data.split.share_code,
+          restaurant_name: data.split.restaurant_name,
+          total: data.split.total,
+          currency: data.split.currency,
+          created_at: data.split.created_at,
+          person_count: data.people.length,
+        })
       } catch {
         setNotFound(true)
       } finally {
