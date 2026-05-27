@@ -1,4 +1,7 @@
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
+
+const InstallBanner = dynamic(() => import('@/components/InstallBanner'), { ssr: false })
 
 const steps = [
   {
@@ -53,6 +56,8 @@ export default function HomePage() {
         </Link>
       </header>
 
+      <InstallBanner />
+
       {/* Hero */}
       <section className="px-6 py-12 text-center">
         <h2 className="text-4xl font-bold tracking-tight text-black sm:text-5xl">
@@ -61,12 +66,20 @@ export default function HomePage() {
         <p className="mx-auto mt-4 max-w-md text-lg text-gray-500">
           Snap a receipt. Assign items. Everyone gets a payment link. No app needed.
         </p>
-        <Link
-          href="/split/new"
-          className="mt-8 inline-block rounded-full bg-black px-8 py-3.5 text-base font-semibold text-white transition-opacity hover:opacity-80"
-        >
-          Scan a Receipt →
-        </Link>
+        <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <Link
+            href="/split/new"
+            className="inline-block rounded-full bg-black px-8 py-3.5 text-base font-semibold text-white transition-opacity hover:opacity-80"
+          >
+            Scan a Receipt →
+          </Link>
+          <Link
+            href="/trip/new"
+            className="inline-block rounded-full border border-gray-200 px-8 py-3.5 text-base font-semibold text-black transition-colors hover:bg-gray-50"
+          >
+            🗺️ Start a Trip
+          </Link>
+        </div>
         <p className="mt-3 text-sm text-gray-400">No account required</p>
       </section>
 

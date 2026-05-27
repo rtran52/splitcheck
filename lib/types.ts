@@ -44,6 +44,19 @@ export type ParsedReceipt = {
   currency: string
 }
 
+export type Trip = {
+  id: string
+  created_at: string
+  name: string
+  share_code: string
+}
+
+export type TripSplit = {
+  id: string
+  trip_id: string
+  split_id: string
+}
+
 export type PersonTotal = {
   person: Person
   itemsTotal: number

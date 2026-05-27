@@ -83,6 +83,31 @@ export function getSplitHistory(): SavedSplit[] {
   }
 }
 
+export type SavedTrip = {
+  id: string
+  name: string
+  created_at: string
+  split_count: number
+  total: number
+}
+
+export function saveTripToHistory(trip: SavedTrip): void {
+  if (typeof window === 'undefined') return
+  const existing = getTripHistory()
+  const updated = [trip, ...existing.filter((t) => t.id !== trip.id)]
+  localStorage.setItem('splitcheck_trips', JSON.stringify(updated.slice(0, 10)))
+}
+
+export function getTripHistory(): SavedTrip[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem('splitcheck_trips')
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
 export function deleteSplitFromHistory(id: string): void {
   if (typeof window === 'undefined') return
   const existing = getSplitHistory()
