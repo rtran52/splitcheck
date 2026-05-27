@@ -108,6 +108,26 @@ export function getTripHistory(): SavedTrip[] {
   }
 }
 
+export function getRecentPeople(): string[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem('splitcheck_people_history')
+    const people: string[] = raw ? JSON.parse(raw) : []
+    return Array.from(new Set(people)).slice(0, 8)
+  } catch {
+    return []
+  }
+}
+
+export function savePersonToHistory(name: string): void {
+  if (typeof window === 'undefined') return
+  try {
+    const existing = getRecentPeople()
+    const updated = [name, ...existing.filter(n => n.toLowerCase() !== name.toLowerCase())]
+    localStorage.setItem('splitcheck_people_history', JSON.stringify(updated.slice(0, 20)))
+  } catch { /* ignore */ }
+}
+
 export function deleteSplitFromHistory(id: string): void {
   if (typeof window === 'undefined') return
   const existing = getSplitHistory()

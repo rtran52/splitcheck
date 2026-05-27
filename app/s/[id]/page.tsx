@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
-import { formatCurrency, getAvatarColor, getInitials, calculatePersonTotals, saveSplitToHistory } from '@/lib/utils'
+import { formatCurrency, getAvatarColor, getInitials, calculatePersonTotals, saveSplitToHistory, getRecentPeople, savePersonToHistory } from '@/lib/utils'
 import { Split, ReceiptItem, Person, Assignment } from '@/lib/types'
+import { toast } from '@/components/Toast'
 
 export default function AssignPage() {
   const router = useRouter()
@@ -18,14 +19,19 @@ export default function AssignPage() {
   const [people, setPeople] = useState<Person[]>([])
   const [assignments, setAssignments] = useState<Assignment[]>([])
 
-  const [addingPerson, setAddingPerson] = useState(false)
+  const [showAddInput, setShowAddInput] = useState(false)
   const [newPersonName, setNewPersonName] = useState('')
   const [birthdayMode, setBirthdayMode] = useState(false)
   const [honorId, setHonorId] = useState<string | null>(null)
   const [copiedLink, setCopiedLink] = useState(false)
   const [completing, setCompleting] = useState(false)
+  const [recentPeople, setRecentPeople] = useState<string[]>([])
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+
+  useEffect(() => {
+    setRecentPeople(getRecentPeople())
+  }, [])
 
   useEffect(() => {
     async function load() {
@@ -68,21 +74,23 @@ export default function AssignPage() {
     ? calculatePersonTotals(people, items, assignments, split.tax, split.tip)
     : []
 
-  const handleAddPerson = async () => {
-    const name = newPersonName.trim()
-    if (!name) return
+  const addPersonByName = async (name: string) => {
+    const trimmed = name.trim()
+    if (!trimmed) return
     const color = getAvatarColor(people.length)
     const optimisticPerson: Person = {
-      id: `temp-${Date.now()}`, split_id: splitId, name, color, venmo_handle: null, cashapp_handle: null,
+      id: `temp-${Date.now()}`, split_id: splitId, name: trimmed, color, venmo_handle: null, cashapp_handle: null,
     }
     setPeople((prev) => [...prev, optimisticPerson])
     setNewPersonName('')
-    setAddingPerson(false)
+    setShowAddInput(false)
+    savePersonToHistory(trimmed)
+    toast(`${trimmed} added`)
     try {
       const res = await fetch(`/api/splits/${splitId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'add_person', name, color }),
+        body: JSON.stringify({ type: 'add_person', name: trimmed, color }),
       })
       const data = await res.json()
       setPeople((prev) => prev.map((p) => (p.id === optimisticPerson.id ? data : p)))
@@ -90,6 +98,8 @@ export default function AssignPage() {
       setPeople((prev) => prev.filter((p) => p.id !== optimisticPerson.id))
     }
   }
+
+  const handleAddPerson = () => addPersonByName(newPersonName)
 
   const toggleAssignment = async (itemId: string, personId: string) => {
     const existing = assignments.find((a) => a.item_id === itemId && a.person_id === personId)
@@ -124,6 +134,7 @@ export default function AssignPage() {
   const copyShareLink = () => {
     navigator.clipboard.writeText(`${appUrl}/s/${splitId}/guest`)
     setCopiedLink(true)
+    toast('Link copied!')
     setTimeout(() => setCopiedLink(false), 2000)
   }
 
@@ -134,7 +145,7 @@ export default function AssignPage() {
       const summaryUrl = honorId ? `/s/${splitId}/summary?honorId=${honorId}` : `/s/${splitId}/summary`
       router.push(summaryUrl)
     } catch {
-      alert('Failed to complete split.')
+      toast('Failed to complete split', 'error')
       setCompleting(false)
     }
   }
@@ -157,6 +168,12 @@ export default function AssignPage() {
   }
 
   const currency = split.currency || 'USD'
+
+  const filteredSuggestions = recentPeople.filter(
+    (name) =>
+      !people.map((p) => p.name.toLowerCase()).includes(name.toLowerCase()) &&
+      (newPersonName === '' || name.toLowerCase().startsWith(newPersonName.toLowerCase()))
+  )
 
   return (
     <main className="min-h-screen bg-white pb-56">
@@ -183,7 +200,13 @@ export default function AssignPage() {
         {people.map((person) => (
           <button
             key={person.id}
-            onClick={() => { if (birthdayMode) setHonorId(honorId === person.id ? null : person.id) }}
+            onClick={() => {
+              if (birthdayMode) {
+                const newId = honorId === person.id ? null : person.id
+                setHonorId(newId)
+                if (newId) toast(`🎂 ${person.name} gets a free meal!`)
+              }
+            }}
             className="flex shrink-0 flex-col items-center gap-1"
           >
             <div
@@ -199,28 +222,9 @@ export default function AssignPage() {
           </button>
         ))}
 
-        {addingPerson ? (
-          <div className="flex shrink-0 items-center gap-1.5">
-            <input
-              type="text"
-              value={newPersonName}
-              onChange={(e) => setNewPersonName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleAddPerson()
-                if (e.key === 'Escape') { setAddingPerson(false); setNewPersonName('') }
-              }}
-              placeholder="Name"
-              autoFocus
-              className="w-20 rounded-[10px] px-2.5 py-2 text-sm text-black"
-              style={{ background: '#f5f5f5' }}
-            />
-            <button onClick={handleAddPerson} className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-xs text-white">
-              ✓
-            </button>
-          </div>
-        ) : (
+        {!showAddInput && (
           <button
-            onClick={() => setAddingPerson(true)}
+            onClick={() => setShowAddInput(true)}
             className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full text-xl"
             style={{ border: '1.5px dashed #ccc', color: '#ccc' }}
           >
@@ -229,7 +233,63 @@ export default function AssignPage() {
         )}
       </div>
 
-      {people.length === 0 && (
+      {/* Add person panel with suggestions */}
+      {showAddInput && (
+        <div className="px-5 pb-3">
+          <div className="mb-3 flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Type a name..."
+              value={newPersonName}
+              onChange={(e) => setNewPersonName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddPerson()}
+              className="h-10 flex-1 rounded-xl border px-3 text-sm text-black"
+              style={{ background: '#f9f9f9', borderColor: '#e0e0e0' }}
+              autoFocus
+            />
+            <button
+              onClick={handleAddPerson}
+              disabled={!newPersonName.trim()}
+              className="h-10 rounded-xl bg-black px-4 text-[13px] font-semibold text-white disabled:opacity-30"
+            >
+              Add
+            </button>
+            <button
+              onClick={() => { setShowAddInput(false); setNewPersonName('') }}
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-[16px]"
+              style={{ background: '#f5f5f5' }}
+            >
+              ✕
+            </button>
+          </div>
+
+          {filteredSuggestions.length > 0 && (
+            <div>
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#ccc' }}>Recent</p>
+              <div className="flex flex-wrap gap-2">
+                {filteredSuggestions.map((name) => (
+                  <button
+                    key={name}
+                    onClick={() => addPersonByName(name)}
+                    className="flex items-center gap-2 rounded-xl px-3 py-2 text-[13px] font-medium text-black active:bg-gray-100"
+                    style={{ background: '#f9f9f9', border: '0.5px solid #f0f0f0' }}
+                  >
+                    <div
+                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white"
+                      style={{ background: getAvatarColor(0) }}
+                    >
+                      {name[0].toUpperCase()}
+                    </div>
+                    {name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {people.length === 0 && !showAddInput && (
         <p className="px-5 text-xs" style={{ color: '#bbb' }}>Add people to get started</p>
       )}
 
@@ -258,12 +318,10 @@ export default function AssignPage() {
       {/* Items */}
       <div className="mt-2 px-5">
         <p className="text-[11px] font-semibold uppercase" style={{ color: '#bbb', letterSpacing: '0.08em' }}>Items</p>
-
         <div className="mt-2">
           {items.map((item) => {
             const itemAssigns = getItemAssignments(item.id)
             const isAssigned = itemAssigns.length > 0
-
             return (
               <div key={item.id} className="py-3" style={{ borderBottom: '0.5px solid #f5f5f5' }}>
                 <div className="flex items-center justify-between">
@@ -272,14 +330,11 @@ export default function AssignPage() {
                     {isAssigned ? (
                       <span className="text-xs" style={{ color: '#34c759' }}>✓</span>
                     ) : (
-                      <span className="rounded-full px-1.5 py-0.5 text-[10px]" style={{ background: '#f5f5f5', color: '#ccc' }}>
-                        unassigned
-                      </span>
+                      <span className="rounded-full px-1.5 py-0.5 text-[10px]" style={{ background: '#f5f5f5', color: '#ccc' }}>unassigned</span>
                     )}
                     <span className="text-sm font-bold text-black">{formatCurrency(item.price, currency)}</span>
                   </div>
                 </div>
-
                 {people.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {people.map((person) => {
@@ -289,10 +344,7 @@ export default function AssignPage() {
                           key={person.id}
                           onClick={() => toggleAssignment(item.id, person.id)}
                           className="flex h-7 w-7 items-center justify-center rounded-full text-[9px] font-bold text-white transition-opacity"
-                          style={{
-                            backgroundColor: person.color,
-                            opacity: assigned ? 1 : 0.3,
-                          }}
+                          style={{ backgroundColor: person.color, opacity: assigned ? 1 : 0.3 }}
                           title={person.name}
                         >
                           {getInitials(person.name)}
@@ -309,7 +361,6 @@ export default function AssignPage() {
 
       {/* Bottom bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white px-5 pb-8 pt-3" style={{ borderTop: '0.5px solid #f0f0f0' }}>
-        {/* Running totals */}
         {people.length > 0 && (
           <div className="no-scrollbar mb-2 flex gap-1.5 overflow-x-auto">
             {personTotals.map((pt) => (
@@ -322,13 +373,9 @@ export default function AssignPage() {
             ))}
           </div>
         )}
-
-        {/* Progress */}
         <p className="mb-2 text-center text-xs" style={{ color: allAssigned ? '#34c759' : '#999' }}>
           {allAssigned ? 'All items assigned ✓' : `${assignedCount} of ${items.length} items assigned`}
         </p>
-
-        {/* CTA */}
         <button
           onClick={handleComplete}
           disabled={!allAssigned || completing}

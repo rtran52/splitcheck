@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useParams, useSearchParams } from 'next/navigation'
 import html2canvas from 'html2canvas'
 import { formatCurrency, calculatePersonTotals, getInitials } from '@/lib/utils'
+import { toast } from '@/components/Toast'
 import { Split, ReceiptItem, Person, Assignment, PersonTotal } from '@/lib/types'
 import PaymentButton from '@/components/PaymentButton'
 import ShareCard from '@/components/ShareCard'
@@ -92,6 +93,7 @@ export default function SummaryPage() {
     link.download = 'splitcheck.png'
     link.href = canvas.toDataURL()
     link.click()
+    toast('Image saved!')
   }
 
   const copySummary = () => {
@@ -103,6 +105,7 @@ export default function SummaryPage() {
     const text = `🧾 ${name}\n${lines.join('\n')}\nTotal: ${formatCurrency(split?.total || 0, currency)}\nSplit with SplitCheck ✓`
     navigator.clipboard.writeText(text)
     setCopiedSummary(true)
+    toast('Summary copied!')
     setTimeout(() => setCopiedSummary(false), 2000)
   }
 

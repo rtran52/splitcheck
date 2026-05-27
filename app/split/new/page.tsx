@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { formatCurrency, saveSplitToHistory } from '@/lib/utils'
+import { toast } from '@/components/Toast'
 import { ParsedReceipt } from '@/lib/types'
 
 type PageState = 'idle' | 'loading' | 'review' | 'error'
@@ -31,6 +32,8 @@ export default function NewSplitPage() {
   const [customTip, setCustomTip] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [errorMessage, setErrorMessage] = useState("Couldn't read that receipt")
+  const [evenSplit, setEvenSplit] = useState(false)
+  const [evenSplitCount, setEvenSplitCount] = useState(2)
 
   const calculatedSubtotal = items.reduce((sum, item) => sum + item.price, 0)
   const calculatedTotal = calculatedSubtotal + tax + tip
@@ -143,6 +146,8 @@ export default function NewSplitPage() {
           tip,
           total: calculatedTotal,
           currency,
+          evenSplit,
+          person_count: evenSplit ? evenSplitCount : undefined,
         }),
       })
       if (!res.ok) throw new Error('Failed to create split')
@@ -167,9 +172,10 @@ export default function NewSplitPage() {
         } catch { /* best effort */ }
         localStorage.removeItem('pending_trip_id')
       }
+      toast('Split created!')
       router.push(`/s/${data.split_id}`)
     } catch {
-      alert('Failed to create split. Please try again.')
+      toast('Failed to create split', 'error')
       setIsCreating(false)
     }
   }
@@ -386,6 +392,43 @@ export default function NewSplitPage() {
           )}
         </div>
 
+        {/* Even split toggle */}
+        <div className="mt-3 flex items-center justify-between rounded-2xl p-4" style={{ background: '#f5f5f5' }}>
+          <div>
+            <p className="text-sm font-semibold text-black">Split evenly</p>
+            <p className="mt-0.5 text-xs" style={{ color: '#999' }}>Skip item assignment</p>
+          </div>
+          <button
+            onClick={() => setEvenSplit(!evenSplit)}
+            className="relative rounded-full transition-colors"
+            style={{ width: 44, height: 26, background: evenSplit ? '#000' : '#e0e0e0', borderRadius: 13 }}
+          >
+            <span
+              className="absolute top-[3px] left-[3px] block rounded-full bg-white transition-transform"
+              style={{ width: 20, height: 20, transform: evenSplit ? 'translateX(18px)' : 'translateX(0)' }}
+            />
+          </button>
+        </div>
+
+        {evenSplit && (
+          <div className="mt-2 flex items-center justify-between rounded-2xl p-4" style={{ background: '#f5f5f5' }}>
+            <p className="text-sm text-black">Number of people</p>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setEvenSplitCount(Math.max(2, evenSplitCount - 1))}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-lg font-medium active:scale-95"
+                style={{ border: '1px solid #e0e0e0' }}
+              >−</button>
+              <span className="w-4 text-center text-[16px] font-bold text-black">{evenSplitCount}</span>
+              <button
+                onClick={() => setEvenSplitCount(Math.min(20, evenSplitCount + 1))}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-lg font-medium active:scale-95"
+                style={{ border: '1px solid #e0e0e0' }}
+              >+</button>
+            </div>
+          </div>
+        )}
+
         {/* Totals box */}
         <div className="mt-3 rounded-[14px] p-3.5" style={{ background: '#f9f9f9' }}>
           <div className="flex justify-between py-1.5 text-sm">
@@ -421,8 +464,18 @@ export default function NewSplitPage() {
             </div>
           </div>
           <p className="mt-2 text-xs" style={{ color: '#bbb' }}>
-            {formatCurrency(tip, currency)} tip · {formatCurrency(calculatedTotal / 2, currency)} per person
+            {formatCurrency(tip, currency)} tip · {formatCurrency(calculatedTotal / (evenSplit ? evenSplitCount : 2), currency)} per person
           </p>
+          {evenSplit && (
+            <div className="mt-2 pt-2" style={{ borderTop: '0.5px solid #e8e8e8' }}>
+              <div className="flex items-center justify-between">
+                <span className="text-[13px] font-semibold text-black">Each person pays</span>
+                <span className="text-[16px] font-bold text-black">
+                  {formatCurrency(calculatedTotal / evenSplitCount, currency)}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -446,7 +499,9 @@ export default function NewSplitPage() {
               Creating your split...
             </span>
           ) : (
-            'Looks good → Add people'
+            evenSplit
+              ? `Split ${formatCurrency(calculatedTotal / evenSplitCount, currency)} each →`
+              : 'Looks good → Add people'
           )}
         </button>
       </div>
