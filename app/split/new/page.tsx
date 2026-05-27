@@ -29,7 +29,8 @@ export default function NewSplitPage() {
   const [editingTax, setEditingTax] = useState(false)
   const [tipPercent, setTipPercent] = useState<number | null>(20)
   const [customTip, setCustomTip] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("Couldn't read that receipt")
 
   const calculatedSubtotal = items.reduce((sum, item) => sum + item.price, 0)
   const calculatedTotal = calculatedSubtotal + tax + tip
@@ -47,14 +48,51 @@ export default function NewSplitPage() {
         new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
       )
       const mimeType = file.type
-      const res = await fetch('/api/scan-receipt', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ base64Image, mimeType }),
-      })
-      if (!res.ok) throw new Error('Failed to scan receipt')
-      const receipt: ParsedReceipt = await res.json()
-      if ('error' in receipt) throw new Error(String(receipt.error))
+
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000)
+
+      let res: Response
+      try {
+        res = await fetch('/api/scan-receipt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ base64Image, mimeType }),
+          signal: controller.signal,
+        })
+      } catch (fetchErr) {
+        clearTimeout(timeoutId)
+        if (fetchErr instanceof DOMException && fetchErr.name === 'AbortError') {
+          setErrorMessage('That took too long — try again with better lighting')
+        } else {
+          setErrorMessage('No internet connection — check your signal and try again')
+        }
+        setState('error')
+        return
+      }
+      clearTimeout(timeoutId)
+
+      if (!res.ok) {
+        setErrorMessage("Couldn't read that receipt — try a clearer photo")
+        setState('error')
+        return
+      }
+
+      let receipt: ParsedReceipt
+      try {
+        receipt = await res.json()
+      } catch {
+        setErrorMessage("Couldn't read that receipt — try a clearer photo")
+        setState('error')
+        return
+      }
+
+      if ('error' in receipt) {
+        setErrorMessage("Couldn't read that receipt — try a clearer photo")
+        setState('error')
+        return
+      }
+
       setRestaurantName(receipt.restaurant_name)
       setItems(receipt.items.map((item) => ({ ...item, editingPrice: false })))
       setSubtotal(receipt.subtotal)
@@ -66,6 +104,7 @@ export default function NewSplitPage() {
       setCustomTip(false)
       setState('review')
     } catch {
+      setErrorMessage("Couldn't read that receipt — try a clearer photo")
       setState('error')
     }
   }, [])
@@ -90,8 +129,8 @@ export default function NewSplitPage() {
     setItems((prev) => [...prev, { name: '', price: 0, editingPrice: true }])
   }
 
-  const handleSubmit = async () => {
-    setSubmitting(true)
+  const handleCreateSplit = async () => {
+    setIsCreating(true)
     try {
       const res = await fetch('/api/splits', {
         method: 'POST',
@@ -131,14 +170,14 @@ export default function NewSplitPage() {
       router.push(`/s/${data.split_id}`)
     } catch {
       alert('Failed to create split. Please try again.')
-      setSubmitting(false)
+      setIsCreating(false)
     }
   }
 
   // ─── IDLE ───
   if (state === 'idle') {
     return (
-      <main className="min-h-screen bg-white">
+      <main className="flex min-h-screen flex-col bg-white">
         <header className="flex items-center gap-3 px-5 py-3.5" style={{ borderBottom: '0.5px solid #f0f0f0' }}>
           <Link href="/" className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: '#f5f5f5' }}>
             <span className="text-sm">←</span>
@@ -149,55 +188,65 @@ export default function NewSplitPage() {
           </div>
         </header>
 
-        <div className="mx-5 mt-5">
-          <div className="overflow-hidden rounded-2xl border border-dashed border-gray-200">
-            {/* Camera option */}
+        <div className="px-5 pb-3 pt-6">
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#ccc' }}>Step 1</p>
+          <h2 className="text-[22px] font-bold tracking-tight text-black">Add your receipt</h2>
+          <p className="mt-1 text-[13px]" style={{ color: '#999' }}>Take a photo or choose from your library</p>
+        </div>
+
+        <div className="mx-5 mt-2">
+          <div className="overflow-hidden rounded-2xl border border-dashed border-gray-200 bg-white">
             <button
               onClick={() => cameraInputRef.current?.click()}
-              className="flex w-full items-center gap-4 p-5 transition-colors active:bg-gray-50"
+              className="flex w-full items-center gap-4 px-5 py-5 text-left transition-colors active:bg-gray-50"
             >
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-black text-2xl">
-                📷
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-black text-xl">📷</div>
+              <div className="flex-1">
+                <p className="text-[15px] font-semibold text-black">Take a photo</p>
+                <p className="mt-0.5 text-xs" style={{ color: '#999' }}>Point at a receipt right now</p>
               </div>
-              <div className="text-left">
-                <div className="text-[15px] font-semibold text-black">Take a photo</div>
-                <div className="mt-0.5 text-xs text-gray-400">Point at a receipt right now</div>
-              </div>
-              <div className="ml-auto text-lg text-gray-300">›</div>
+              <span className="text-lg" style={{ color: '#ccc' }}>›</span>
             </button>
 
-            {/* Divider */}
             <div className="flex items-center gap-3 px-5">
-              <div className="h-px flex-1 bg-gray-100"></div>
-              <span className="text-[11px] font-medium text-gray-300">or</span>
-              <div className="h-px flex-1 bg-gray-100"></div>
+              <div className="h-px flex-1" style={{ background: '#f0f0f0' }}></div>
+              <span className="text-[11px] font-medium" style={{ color: '#ccc' }}>or</span>
+              <div className="h-px flex-1" style={{ background: '#f0f0f0' }}></div>
             </div>
 
-            {/* Library option */}
             <button
               onClick={() => libraryInputRef.current?.click()}
-              className="flex w-full items-center gap-4 p-5 transition-colors active:bg-gray-50"
+              className="flex w-full items-center gap-4 px-5 py-5 text-left transition-colors active:bg-gray-50"
             >
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-2xl">
-                🖼️
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-xl" style={{ background: '#f5f5f5' }}>🖼️</div>
+              <div className="flex-1">
+                <p className="text-[15px] font-semibold text-black">Photo library</p>
+                <p className="mt-0.5 text-xs" style={{ color: '#999' }}>Pick a saved receipt photo</p>
               </div>
-              <div className="text-left">
-                <div className="text-[15px] font-semibold text-black">Photo library</div>
-                <div className="mt-0.5 text-xs text-gray-400">Pick a saved receipt photo</div>
-              </div>
-              <div className="ml-auto text-lg text-gray-300">›</div>
+              <span className="text-lg" style={{ color: '#ccc' }}>›</span>
             </button>
           </div>
         </div>
 
-        <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleInputChange} />
-        <input ref={libraryInputRef} type="file" accept="image/*" className="hidden" onChange={handleInputChange} />
+        <div className="mx-5 mt-4 rounded-2xl p-4" style={{ background: '#f9f9f9' }}>
+          <p className="text-xs font-semibold text-black">Works with any receipt</p>
+          <p className="mt-1 text-xs leading-relaxed" style={{ color: '#999' }}>
+            Crumpled, dark, blurry, or foreign — our AI handles it all.
+          </p>
+        </div>
 
-        <div className="mt-8 text-center">
-          <button onClick={() => alert('Coming soon!')} className="text-xs underline" style={{ color: '#bbb' }}>
+        <div className="mt-auto px-5 pb-6 pt-4">
+          <button
+            onClick={() => alert('Manual entry coming soon!')}
+            className="w-full py-2 text-center text-[13px]"
+            style={{ color: '#999' }}
+          >
             Enter items manually instead →
           </button>
         </div>
+
+        <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleInputChange} />
+        <input ref={libraryInputRef} type="file" accept="image/*" className="hidden" onChange={handleInputChange} />
       </main>
     )
   }
@@ -218,9 +267,9 @@ export default function NewSplitPage() {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-white px-5">
         <span className="text-5xl">😵</span>
-        <h1 className="mt-4 text-[18px] font-semibold">Couldn&apos;t read that receipt</h1>
+        <h1 className="mt-4 text-[18px] font-semibold text-black">{errorMessage}</h1>
         <p className="mt-2 text-center text-[13px]" style={{ color: '#999' }}>
-          The image might be too blurry or dark. Try again with better lighting.
+          Try again with a different photo or enter items manually.
         </p>
         <div className="mt-6 flex w-full max-w-xs flex-col gap-2.5">
           <button
@@ -230,7 +279,7 @@ export default function NewSplitPage() {
             Try again
           </button>
           <button
-            onClick={() => alert('Coming soon!')}
+            onClick={() => alert('Manual entry coming soon!')}
             className="w-full rounded-[14px] py-[14px] text-[15px] font-medium text-black"
             style={{ background: '#f5f5f5' }}
           >
@@ -255,10 +304,8 @@ export default function NewSplitPage() {
       </header>
 
       <div className="px-5 pt-5">
-        {/* Items label */}
         <p className="text-[11px] font-semibold uppercase" style={{ color: '#bbb', letterSpacing: '0.08em' }}>Items</p>
 
-        {/* Items list */}
         <div className="mt-2">
           {items.map((item, index) => (
             <div key={index} className="flex items-center gap-2 py-3" style={{ borderBottom: '0.5px solid #f5f5f5' }}>
@@ -285,18 +332,11 @@ export default function NewSplitPage() {
                   {formatCurrency(item.price, currency)}
                 </button>
               )}
-              <button
-                onClick={() => deleteItem(index)}
-                className="shrink-0 text-xs"
-                style={{ color: '#ccc' }}
-              >
-                ✕
-              </button>
+              <button onClick={() => deleteItem(index)} className="shrink-0 text-xs" style={{ color: '#ccc' }}>✕</button>
             </div>
           ))}
         </div>
 
-        {/* Add item */}
         <button onClick={addItem} className="flex w-full items-center gap-2 py-3 text-sm" style={{ color: '#888' }}>
           <span className="flex h-5 w-5 items-center justify-center rounded-full text-xs" style={{ background: '#f5f5f5' }}>+</span>
           Add item
@@ -389,14 +429,21 @@ export default function NewSplitPage() {
       {/* CTA */}
       <div className="fixed bottom-0 left-0 right-0 bg-white px-5 pb-8 pt-3">
         <button
-          onClick={handleSubmit}
-          disabled={submitting || items.length === 0}
-          className="w-full rounded-[14px] bg-black py-[15px] text-[15px] font-semibold text-white disabled:opacity-[0.35]"
+          onClick={handleCreateSplit}
+          disabled={isCreating || items.length === 0}
+          className={`w-full rounded-2xl py-4 text-[15px] font-semibold transition-all ${
+            isCreating
+              ? 'cursor-not-allowed bg-gray-100 text-gray-400'
+              : 'bg-black text-white active:scale-[0.98]'
+          }`}
         >
-          {submitting ? (
-            <span className="inline-flex items-center gap-2">
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              Saving...
+          {isCreating ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Creating your split...
             </span>
           ) : (
             'Looks good → Add people'
