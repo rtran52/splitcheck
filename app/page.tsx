@@ -1,7 +1,7 @@
-import Link from 'next/link'
-import dynamic from 'next/dynamic'
+'use client'
 
-const InstallBanner = dynamic(() => import('@/components/InstallBanner'), { ssr: false })
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
 
 const steps = [
   {
@@ -41,6 +41,16 @@ const features = [
 ]
 
 export default function HomePage() {
+  const [showBanner, setShowBanner] = useState(false)
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem('pwa_banner_dismissed')
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    if (!dismissed && !isStandalone) {
+      setShowBanner(true)
+    }
+  }, [])
+
   return (
     <main className="min-h-screen bg-white">
       {/* Header */}
@@ -56,7 +66,28 @@ export default function HomePage() {
         </Link>
       </header>
 
-      <InstallBanner />
+      {showBanner && (
+        <div className="mx-4 mt-4 flex items-start justify-between gap-3 rounded-2xl bg-black p-4 text-white">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">📲</span>
+            <div>
+              <p className="text-sm font-semibold">Add to your home screen</p>
+              <p className="mt-0.5 text-xs text-gray-300">
+                Tap the share button below then &quot;Add to Home Screen&quot; for the best experience
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              localStorage.setItem('pwa_banner_dismissed', 'true')
+              setShowBanner(false)
+            }}
+            className="mt-0.5 flex-shrink-0 text-xl leading-none text-gray-400"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* Hero */}
       <section className="px-6 py-12 text-center">
