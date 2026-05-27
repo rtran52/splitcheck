@@ -25,40 +25,33 @@ export default function ShareCard({
   return (
     <div
       id="share-card"
-      className="w-[340px] rounded-2xl bg-white p-6 shadow-lg"
-      style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+      className="w-[340px] bg-white p-6"
+      style={{ borderRadius: 14, border: '0.5px solid #f0f0f0' }}
     >
-      {/* Header */}
       <div className="flex items-center justify-between">
-        <span className="text-sm font-bold text-black">SplitCheck</span>
-        <span className="text-xs text-gray-400">{formattedDate}</span>
+        <span className="text-[11px] font-bold text-black">SplitCheck</span>
+        <span className="text-[11px]" style={{ color: '#bbb' }}>{formattedDate}</span>
       </div>
 
-      {/* Restaurant name */}
-      <h2 className="mt-3 text-xl font-bold text-black">
+      <h2 className="mt-3 text-[15px] font-bold text-black" style={{ letterSpacing: '-0.3px' }}>
         {restaurantName || 'Dinner'}
       </h2>
 
-      {/* Divider */}
-      <div className="my-4 h-px bg-gray-100" />
+      <div className="my-4" style={{ height: '0.5px', background: '#f0f0f0' }} />
 
-      {/* People */}
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         {personTotals.map((pt) => {
           const isHonored = honorId === pt.person.id
           return (
             <div key={pt.person.id} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div
-                  className="h-3 w-3 rounded-full"
-                  style={{ backgroundColor: pt.person.color }}
-                />
-                <span className="text-sm text-black">{pt.person.name}</span>
+                <div className="h-2 w-2 rounded-full" style={{ backgroundColor: pt.person.color }} />
+                <span className="text-[13px] text-black">{pt.person.name}</span>
               </div>
               {isHonored ? (
-                <span className="text-sm">🎂 on us</span>
+                <span className="text-[13px]">🎂 on us</span>
               ) : (
-                <span className="text-sm font-semibold text-black">
+                <span className="text-[13px] font-semibold text-black">
                   {formatCurrency(pt.grandTotal, currency)}
                 </span>
               )}
@@ -67,19 +60,14 @@ export default function ShareCard({
         })}
       </div>
 
-      {/* Divider */}
-      <div className="my-4 h-px bg-gray-100" />
+      <div className="my-4" style={{ height: '0.5px', background: '#f0f0f0' }} />
 
-      {/* Total */}
       <div className="flex items-center justify-between">
-        <span className="text-sm font-semibold text-black">Total</span>
-        <span className="text-sm font-bold text-black">
-          {formatCurrency(total, currency)}
-        </span>
+        <span className="text-[13px] font-semibold text-black">Total</span>
+        <span className="text-[13px] font-bold text-black">{formatCurrency(total, currency)}</span>
       </div>
 
-      {/* Footer */}
-      <p className="mt-5 text-center text-[10px] text-gray-300">
+      <p className="mt-5 text-center text-[10px]" style={{ color: '#ccc' }}>
         Split fairly with SplitCheck
       </p>
     </div>

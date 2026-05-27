@@ -35,31 +35,25 @@ export default function NewSplitPage() {
 
   const handleFileSelect = useCallback(async (file: File) => {
     setState('loading')
-
     try {
       const buffer = await file.arrayBuffer()
       const base64Image = btoa(
         new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
       )
       const mimeType = file.type
-
       const res = await fetch('/api/scan-receipt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ base64Image, mimeType }),
       })
-
       if (!res.ok) throw new Error('Failed to scan receipt')
-
       const receipt: ParsedReceipt = await res.json()
       if ('error' in receipt) throw new Error(String(receipt.error))
-
       setRestaurantName(receipt.restaurant_name)
       setItems(receipt.items.map((item) => ({ ...item, editingPrice: false })))
       setSubtotal(receipt.subtotal)
       setTax(receipt.tax)
       setCurrency(receipt.currency)
-      // Auto-select 20% tip
       const sub = receipt.items.reduce((sum: number, item: { price: number }) => sum + item.price, 0)
       setTip(Math.round(sub * 0.2 * 100) / 100)
       setTipPercent(20)
@@ -80,17 +74,11 @@ export default function NewSplitPage() {
   )
 
   const updateItemPrice = (index: number, value: string) => {
-    setItems((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, price: parseFloat(value) || 0 } : item
-      )
-    )
+    setItems((prev) => prev.map((item, i) => i === index ? { ...item, price: parseFloat(value) || 0 } : item))
   }
 
   const updateItemName = (index: number, value: string) => {
-    setItems((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, name: value } : item))
-    )
+    setItems((prev) => prev.map((item, i) => (i === index ? { ...item, name: value } : item)))
   }
 
   const deleteItem = (index: number) => {
@@ -98,11 +86,7 @@ export default function NewSplitPage() {
   }
 
   const toggleEditPrice = (index: number) => {
-    setItems((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, editingPrice: !item.editingPrice } : item
-      )
-    )
+    setItems((prev) => prev.map((item, i) => i === index ? { ...item, editingPrice: !item.editingPrice } : item))
   }
 
   const addItem = () => {
@@ -125,9 +109,7 @@ export default function NewSplitPage() {
           currency,
         }),
       })
-
       if (!res.ok) throw new Error('Failed to create split')
-
       const data = await res.json()
       saveSplitToHistory({
         id: data.split_id,
@@ -138,8 +120,6 @@ export default function NewSplitPage() {
         created_at: new Date().toISOString(),
         person_count: 0,
       })
-
-      // If part of a trip, link the split to the trip
       const pendingTripId = localStorage.getItem('pending_trip_id')
       if (pendingTripId) {
         try {
@@ -151,7 +131,6 @@ export default function NewSplitPage() {
         } catch { /* best effort */ }
         localStorage.removeItem('pending_trip_id')
       }
-
       router.push(`/s/${data.split_id}`)
     } catch {
       alert('Failed to create split. Please try again.')
@@ -162,60 +141,64 @@ export default function NewSplitPage() {
   // ─── IDLE ───
   if (state === 'idle') {
     return (
-      <main className="min-h-screen bg-white px-6 py-5">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="text-2xl">←</Link>
-          <Link href="/history" className="text-sm text-gray-400 transition-colors hover:text-black">
-            Past splits →
-          </Link>
-        </div>
+      <main className="min-h-screen bg-white">
+        <header className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '0.5px solid #f0f0f0' }}>
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: '#f5f5f5' }}>
+              <span className="text-sm">←</span>
+            </Link>
+            <div>
+              <p className="text-[16px] font-semibold" style={{ letterSpacing: '-0.3px' }}>Scan receipt</p>
+              <p className="text-xs" style={{ color: '#999' }}>Photo or upload</p>
+            </div>
+          </div>
+          <Link href="/history" className="text-xs" style={{ color: '#888' }}>Past splits →</Link>
+        </header>
 
-        <div className="mt-6">
-          <h1 className="text-2xl font-bold text-black">Scan your receipt</h1>
-          <p className="mt-1 text-gray-500">Take a photo or upload an image</p>
-        </div>
-
-        <div
-          onClick={() => fileInputRef.current?.click()}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={handleDrop}
-          className="mt-8 flex h-[280px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 transition-colors hover:border-gray-400"
-        >
-          <span className="text-5xl">📷</span>
-          <p className="mt-4 font-semibold text-black">Tap to take a photo</p>
-          <p className="mt-1 text-sm text-gray-400">or drag and drop an image</p>
-        </div>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0]
-            if (file) handleFileSelect(file)
-          }}
-        />
-
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
-          {['Crumpled receipts', 'Foreign receipts', 'Dark photos'].map((label) => (
-            <span
-              key={label}
-              className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-500"
-            >
-              {label}
-            </span>
-          ))}
-        </div>
-
-        <div className="mt-10 text-center">
-          <button
-            onClick={() => alert('Coming soon!')}
-            className="text-sm text-gray-400 underline"
+        <div className="px-5 pt-6">
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleDrop}
+            className="flex h-[220px] cursor-pointer flex-col items-center justify-center rounded-[20px]"
+            style={{ border: '1.5px dashed #e0e0e0', background: '#fafafa' }}
           >
-            Enter items manually instead →
-          </button>
+            <div className="flex h-[52px] w-[52px] items-center justify-center rounded-[14px] bg-black text-2xl">
+              📷
+            </div>
+            <p className="mt-3 text-[15px] font-semibold text-black">Take a photo</p>
+            <p className="mt-1 text-xs" style={{ color: '#bbb' }}>or drag and drop</p>
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) handleFileSelect(file)
+            }}
+          />
+
+          <div className="mt-5 flex flex-wrap justify-center gap-1.5">
+            {['Crumpled receipts', 'Foreign receipts', 'Dark photos'].map((label) => (
+              <span
+                key={label}
+                className="rounded-[20px] px-2.5 py-1 text-[11px]"
+                style={{ background: '#f5f5f5', color: '#888' }}
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-8 text-center">
+            <button onClick={() => alert('Coming soon!')} className="text-xs underline" style={{ color: '#bbb' }}>
+              Enter items manually instead →
+            </button>
+          </div>
         </div>
       </main>
     )
@@ -224,10 +207,10 @@ export default function NewSplitPage() {
   // ─── LOADING ───
   if (state === 'loading') {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-white px-6">
-        <div className="h-16 w-16 animate-pulse rounded-full bg-black" />
-        <p className="mt-6 text-xl font-bold text-black">Reading your receipt...</p>
-        <p className="mt-2 text-sm text-gray-400">This takes about 5 seconds</p>
+      <main className="flex min-h-screen flex-col items-center justify-center bg-white px-5">
+        <div className="h-[60px] w-[60px] animate-pulse rounded-full bg-black" />
+        <p className="mt-4 text-[16px] font-semibold">Reading your receipt...</p>
+        <p className="mt-2 text-[13px]" style={{ color: '#999' }}>This takes about 5 seconds</p>
       </main>
     )
   }
@@ -235,21 +218,23 @@ export default function NewSplitPage() {
   // ─── ERROR ───
   if (state === 'error') {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-white px-6">
-        <h1 className="text-2xl font-bold text-black">Couldn&apos;t read that receipt</h1>
-        <p className="mt-2 text-center text-sm text-gray-400">
+      <main className="flex min-h-screen flex-col items-center justify-center bg-white px-5">
+        <span className="text-5xl">😵</span>
+        <h1 className="mt-4 text-[18px] font-semibold">Couldn&apos;t read that receipt</h1>
+        <p className="mt-2 text-center text-[13px]" style={{ color: '#999' }}>
           The image might be too blurry or dark. Try again with better lighting.
         </p>
-        <div className="mt-8 flex gap-3">
+        <div className="mt-6 flex w-full max-w-xs flex-col gap-2.5">
           <button
             onClick={() => setState('idle')}
-            className="rounded-full bg-black px-6 py-2.5 text-sm font-semibold text-white"
+            className="w-full rounded-[14px] bg-black py-[15px] text-[15px] font-semibold text-white"
           >
             Try again
           </button>
           <button
             onClick={() => alert('Coming soon!')}
-            className="rounded-full border border-gray-200 px-6 py-2.5 text-sm font-semibold text-black"
+            className="w-full rounded-[14px] py-[14px] text-[15px] font-medium text-black"
+            style={{ background: '#f5f5f5' }}
           >
             Enter manually
           </button>
@@ -260,97 +245,68 @@ export default function NewSplitPage() {
 
   // ─── REVIEW ───
   return (
-    <main className="min-h-screen bg-white px-6 py-5 pb-32">
-      <Link href="/" className="inline-block text-2xl">
-        ←
-      </Link>
-
-      <div className="mt-6">
-        <h1 className="text-2xl font-bold text-black">Does this look right?</h1>
-        <p className="mt-1 text-gray-500">{restaurantName || 'Your receipt'}</p>
-      </div>
-
-      {/* Items list */}
-      <div className="mt-6 divide-y divide-gray-100">
-        {items.map((item, index) => (
-          <div key={index} className="flex items-center gap-2 py-3">
-            <button
-              onClick={() => deleteItem(index)}
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
-            >
-              ✕
-            </button>
-            <input
-              type="text"
-              value={item.name}
-              onChange={(e) => updateItemName(index, e.target.value)}
-              className="min-w-0 flex-1 bg-transparent text-black outline-none"
-              placeholder="Item name"
-            />
-            {item.editingPrice ? (
-              <input
-                type="number"
-                step="0.01"
-                value={item.price || ''}
-                onChange={(e) => updateItemPrice(index, e.target.value)}
-                onBlur={() => toggleEditPrice(index)}
-                autoFocus
-                className="w-20 rounded bg-gray-50 px-2 py-1 text-right text-black outline-none ring-1 ring-gray-200"
-              />
-            ) : (
-              <button
-                onClick={() => toggleEditPrice(index)}
-                className="shrink-0 text-black"
-              >
-                {formatCurrency(item.price, currency)}
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Add item */}
-      <button
-        onClick={addItem}
-        className="mt-2 flex w-full items-center gap-2 py-3 text-sm text-gray-400 transition-colors hover:text-black"
-      >
-        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-xs">
-          +
-        </span>
-        Add item
-      </button>
-
-      {/* Summary */}
-      <div className="mt-6 space-y-3 border-t border-gray-100 pt-6">
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-500">Subtotal</span>
-          <span className="text-black">{formatCurrency(calculatedSubtotal, currency)}</span>
-        </div>
-
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-500">Tax</span>
-          {editingTax ? (
-            <input
-              type="number"
-              step="0.01"
-              value={tax || ''}
-              onChange={(e) => setTax(parseFloat(e.target.value) || 0)}
-              onBlur={() => setEditingTax(false)}
-              autoFocus
-              className="w-20 rounded bg-gray-50 px-2 py-1 text-right text-black outline-none ring-1 ring-gray-200"
-            />
-          ) : (
-            <button onClick={() => setEditingTax(true)} className="text-black">
-              {formatCurrency(tax, currency)}
-            </button>
-          )}
-        </div>
-
+    <main className="min-h-screen bg-white pb-28">
+      <header className="flex items-center gap-3 px-5 py-3.5" style={{ borderBottom: '0.5px solid #f0f0f0' }}>
+        <Link href="/" className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: '#f5f5f5' }}>
+          <span className="text-sm">←</span>
+        </Link>
         <div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-500">Tip</span>
-            <span className="text-black">{formatCurrency(tip, currency)}</span>
-          </div>
+          <p className="text-[16px] font-semibold" style={{ letterSpacing: '-0.3px' }}>Review receipt</p>
+          <p className="text-xs" style={{ color: '#999' }}>{restaurantName || 'Your receipt'}</p>
+        </div>
+      </header>
+
+      <div className="px-5 pt-5">
+        {/* Items label */}
+        <p className="text-[11px] font-semibold uppercase" style={{ color: '#bbb', letterSpacing: '0.08em' }}>Items</p>
+
+        {/* Items list */}
+        <div className="mt-2">
+          {items.map((item, index) => (
+            <div key={index} className="flex items-center gap-2 py-3" style={{ borderBottom: '0.5px solid #f5f5f5' }}>
+              <input
+                type="text"
+                value={item.name}
+                onChange={(e) => updateItemName(index, e.target.value)}
+                className="min-w-0 flex-1 bg-transparent text-sm text-black"
+                placeholder="Item name"
+              />
+              {item.editingPrice ? (
+                <input
+                  type="number"
+                  step="0.01"
+                  value={item.price || ''}
+                  onChange={(e) => updateItemPrice(index, e.target.value)}
+                  onBlur={() => toggleEditPrice(index)}
+                  autoFocus
+                  className="w-20 rounded-lg px-2 py-1 text-right text-sm font-bold text-black"
+                  style={{ background: '#f5f5f5' }}
+                />
+              ) : (
+                <button onClick={() => toggleEditPrice(index)} className="shrink-0 text-sm font-bold text-black">
+                  {formatCurrency(item.price, currency)}
+                </button>
+              )}
+              <button
+                onClick={() => deleteItem(index)}
+                className="shrink-0 text-xs"
+                style={{ color: '#ccc' }}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Add item */}
+        <button onClick={addItem} className="flex w-full items-center gap-2 py-3 text-sm" style={{ color: '#888' }}>
+          <span className="flex h-5 w-5 items-center justify-center rounded-full text-xs" style={{ background: '#f5f5f5' }}>+</span>
+          Add item
+        </button>
+
+        {/* Tip */}
+        <div className="mt-4">
+          <p className="text-[11px] font-semibold uppercase" style={{ color: '#bbb', letterSpacing: '0.08em' }}>Tip</p>
           <div className="mt-2 flex gap-2">
             {[18, 20, 22].map((pct) => (
               <button
@@ -360,25 +316,20 @@ export default function NewSplitPage() {
                   setCustomTip(false)
                   setTip(Math.round(calculatedSubtotal * (pct / 100) * 100) / 100)
                 }}
-                className={`flex-1 rounded-full py-1.5 text-xs font-medium transition-colors ${
+                className="flex-1 rounded-[10px] py-2 text-[13px] font-medium transition-colors"
+                style={
                   tipPercent === pct && !customTip
-                    ? 'bg-black text-white'
-                    : 'border border-gray-200 text-black'
-                }`}
+                    ? { background: '#000', color: '#fff' }
+                    : { background: '#f5f5f5', color: '#666' }
+                }
               >
                 {pct}%
               </button>
             ))}
             <button
-              onClick={() => {
-                setCustomTip(true)
-                setTipPercent(null)
-              }}
-              className={`flex-1 rounded-full py-1.5 text-xs font-medium transition-colors ${
-                customTip
-                  ? 'bg-black text-white'
-                  : 'border border-gray-200 text-black'
-              }`}
+              onClick={() => { setCustomTip(true); setTipPercent(null) }}
+              className="flex-1 rounded-[10px] py-2 text-[13px] font-medium transition-colors"
+              style={customTip ? { background: '#000', color: '#fff' } : { background: '#f5f5f5', color: '#666' }}
             >
               Custom
             </button>
@@ -391,26 +342,58 @@ export default function NewSplitPage() {
               onChange={(e) => setTip(parseFloat(e.target.value) || 0)}
               autoFocus
               placeholder="Enter tip amount"
-              className="mt-2 w-full rounded-lg bg-gray-50 px-3 py-2 text-sm text-black outline-none ring-1 ring-gray-200"
+              className="mt-2 w-full rounded-[10px] px-3 py-2.5 text-sm text-black"
+              style={{ background: '#f5f5f5' }}
             />
           )}
-          <p className="mt-2 text-xs text-gray-400">
-            {formatCurrency(tip, currency)} tip &bull; {formatCurrency(calculatedTotal / 2, currency)} per person
-          </p>
         </div>
 
-        <div className="flex justify-between border-t border-gray-100 pt-3 text-base font-semibold">
-          <span className="text-black">Total</span>
-          <span className="text-black">{formatCurrency(calculatedTotal, currency)}</span>
+        {/* Totals box */}
+        <div className="mt-3 rounded-[14px] p-3.5" style={{ background: '#f9f9f9' }}>
+          <div className="flex justify-between py-1.5 text-sm">
+            <span style={{ color: '#888' }}>Subtotal</span>
+            <span className="text-black">{formatCurrency(calculatedSubtotal, currency)}</span>
+          </div>
+          <div className="flex items-center justify-between py-1.5 text-sm">
+            <span style={{ color: '#888' }}>Tax</span>
+            {editingTax ? (
+              <input
+                type="number"
+                step="0.01"
+                value={tax || ''}
+                onChange={(e) => setTax(parseFloat(e.target.value) || 0)}
+                onBlur={() => setEditingTax(false)}
+                autoFocus
+                className="w-20 rounded-lg bg-white px-2 py-1 text-right text-sm text-black"
+              />
+            ) : (
+              <button onClick={() => setEditingTax(true)} className="text-sm text-black">
+                {formatCurrency(tax, currency)}
+              </button>
+            )}
+          </div>
+          <div className="flex justify-between py-1.5 text-sm">
+            <span style={{ color: '#888' }}>Tip</span>
+            <span className="text-black">{formatCurrency(tip, currency)}</span>
+          </div>
+          <div className="mt-1 pt-2" style={{ borderTop: '0.5px solid #e8e8e8' }}>
+            <div className="flex justify-between text-[15px]">
+              <span className="font-bold text-black">Total</span>
+              <span className="font-bold text-black">{formatCurrency(calculatedTotal, currency)}</span>
+            </div>
+          </div>
+          <p className="mt-2 text-xs" style={{ color: '#bbb' }}>
+            {formatCurrency(tip, currency)} tip · {formatCurrency(calculatedTotal / 2, currency)} per person
+          </p>
         </div>
       </div>
 
-      {/* Submit button */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white p-6">
+      {/* CTA */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white px-5 pb-8 pt-3">
         <button
           onClick={handleSubmit}
           disabled={submitting || items.length === 0}
-          className="w-full rounded-full bg-black py-3.5 text-base font-semibold text-white transition-opacity hover:opacity-80 disabled:opacity-50"
+          className="w-full rounded-[14px] bg-black py-[15px] text-[15px] font-semibold text-white disabled:opacity-[0.35]"
         >
           {submitting ? (
             <span className="inline-flex items-center gap-2">

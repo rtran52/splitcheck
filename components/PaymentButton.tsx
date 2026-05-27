@@ -25,9 +25,9 @@ export default function PaymentButton({
   const [toastVisible, setToastVisible] = useState(false)
 
   const config = {
-    venmo: { label: 'Venmo', emoji: '💚', bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
-    cashapp: { label: 'CashApp', emoji: '💵', bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
-    zelle: { label: 'Zelle', emoji: '💙', bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+    venmo: { label: 'Venmo', bg: '#008CFF' },
+    cashapp: { label: 'Cash App', bg: '#00D632' },
+    zelle: { label: 'Zelle', bg: '#6B1DD9' },
   }[type]
 
   const note = encodeURIComponent(`SplitCheck - ${restaurantName || 'Dinner'}`)
@@ -47,7 +47,6 @@ export default function PaymentButton({
       setTimeout(() => setToastVisible(false), 2500)
       return
     }
-
     if (handle) {
       openPayment(handle)
     } else {
@@ -65,7 +64,7 @@ export default function PaymentButton({
 
   if (editing) {
     return (
-      <div className="flex items-center gap-1">
+      <div className="flex flex-1 items-center gap-1">
         <input
           type="text"
           value={inputValue}
@@ -76,30 +75,26 @@ export default function PaymentButton({
           }}
           placeholder={type === 'venmo' ? '@username' : '$cashtag'}
           autoFocus
-          className="w-24 rounded-lg border border-gray-200 px-2 py-1.5 text-xs text-black outline-none focus:ring-1 focus:ring-gray-300"
+          className="w-full rounded-[8px] px-2 py-1.5 text-xs text-black"
+          style={{ background: '#f5f5f5' }}
         />
-        <button
-          onClick={handleSave}
-          className="rounded-lg bg-black px-2 py-1.5 text-xs text-white"
-        >
-          Go
-        </button>
+        <button onClick={handleSave} className="rounded-[8px] bg-black px-2 py-1.5 text-xs text-white">Go</button>
       </div>
     )
   }
 
   return (
-    <div className="relative">
+    <div className="relative flex-1">
       <button
         onClick={handleClick}
-        className={`flex items-center gap-1 rounded-lg border ${config.border} ${config.bg} px-3 py-1.5 text-xs font-medium ${config.text} transition-colors`}
+        className="w-full rounded-[10px] border-0 py-[9px] text-xs font-semibold text-white"
+        style={{ background: config.bg }}
       >
-        <span>{config.emoji}</span>
-        <span>{config.label}</span>
+        {config.label}
       </button>
       {toastVisible && (
-        <div className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-black px-2 py-1 text-[10px] text-white">
-          Amount copied! Open Zelle and send {formatCurrency(amount)} to {personName}
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-black px-2.5 py-1 text-[10px] text-white">
+          Copied! Send {formatCurrency(amount)} to {personName}
         </div>
       )}
     </div>

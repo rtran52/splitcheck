@@ -52,10 +52,7 @@ export default function NudgeModal({
     setTone(t)
     const template = pickRandom(MESSAGES[t])
     setMessage(
-      template
-        .replace(/{name}/g, person.name)
-        .replace(/{amount}/g, amountStr)
-        .replace(/{restaurant}/g, restaurant)
+      template.replace(/{name}/g, person.name).replace(/{amount}/g, amountStr).replace(/{restaurant}/g, restaurant)
     )
     setCopied(false)
   }
@@ -72,23 +69,13 @@ export default function NudgeModal({
 
   return (
     <>
-      {/* Backdrop */}
       <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose} />
+      <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[20px] bg-white px-5 pb-10 pt-5">
+        <button onClick={onClose} className="absolute right-4 top-4 text-lg" style={{ color: '#ccc' }}>✕</button>
 
-      {/* Bottom sheet */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl bg-white px-6 pb-8 pt-5 shadow-xl">
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 text-gray-400 transition-colors hover:text-black"
-        >
-          ✕
-        </button>
+        <h2 className="text-[16px] font-semibold text-black">Remind {person.name}</h2>
+        <p className="mt-1 text-xs" style={{ color: '#999' }}>Choose a vibe:</p>
 
-        <h2 className="text-lg font-bold text-black">Remind {person.name}</h2>
-        <p className="mt-1 text-sm text-gray-500">Choose a vibe:</p>
-
-        {/* Tone buttons */}
         <div className="mt-4 flex gap-2">
           {([
             { key: 'gentle' as Tone, emoji: '👻', label: 'Gentle' },
@@ -98,11 +85,12 @@ export default function NudgeModal({
             <button
               key={t.key}
               onClick={() => selectTone(t.key)}
-              className={`flex-1 rounded-xl border px-3 py-2.5 text-center text-sm font-medium transition-colors ${
+              className="flex-1 rounded-[12px] py-2.5 text-center text-[13px] font-medium transition-colors"
+              style={
                 tone === t.key
-                  ? 'border-black bg-black text-white'
-                  : 'border-gray-200 bg-gray-50 text-black hover:bg-gray-100'
-              }`}
+                  ? { background: '#000', color: '#fff' }
+                  : { background: '#f5f5f5', color: '#000' }
+              }
             >
               <span className="text-base">{t.emoji}</span>
               <br />
@@ -111,26 +99,26 @@ export default function NudgeModal({
           ))}
         </div>
 
-        {/* Message */}
         {tone && (
           <div className="mt-4">
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={3}
-              className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-black outline-none focus:ring-1 focus:ring-gray-300"
+              className="w-full resize-none rounded-[12px] p-3 text-sm text-black"
+              style={{ background: '#f5f5f5' }}
             />
-
             <div className="mt-3 flex gap-2">
               <button
                 onClick={copyMessage}
-                className="flex-1 rounded-full border border-gray-200 py-2.5 text-sm font-medium text-black transition-colors hover:bg-gray-50"
+                className="flex-1 rounded-[14px] py-[14px] text-[13px] font-medium text-black"
+                style={{ background: '#f5f5f5' }}
               >
                 {copied ? 'Copied!' : '📋 Copy message'}
               </button>
               <button
                 onClick={openIMessage}
-                className="flex-1 rounded-full bg-black py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-80"
+                className="flex-1 rounded-[14px] bg-black py-[14px] text-[13px] font-medium text-white"
               >
                 💬 Open iMessage
               </button>
