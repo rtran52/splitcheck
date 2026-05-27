@@ -91,8 +91,10 @@ export default function HomePage() {
         <p className="text-[11px] font-semibold uppercase" style={{ color: '#bbb', letterSpacing: '0.08em' }}>
           Free · No account needed
         </p>
-        <h1 className="mx-auto mt-4 max-w-xs text-[30px] font-bold leading-[1.15]" style={{ letterSpacing: '-0.8px' }}>
-          Split any bill{'\n'}in 30 seconds
+        <h1 className="mx-auto mt-4 max-w-xs md:max-w-none text-[30px] md:text-[36px] font-bold tracking-tight leading-tight text-black mb-3">
+          Split any bill{' '}
+          <br className="md:hidden" />
+          in 30 seconds
         </h1>
         <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed" style={{ color: '#888' }}>
           Snap a receipt. Assign items. Everyone gets a payment link. No app needed.

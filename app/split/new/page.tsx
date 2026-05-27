@@ -16,7 +16,8 @@ type EditableItem = {
 
 export default function NewSplitPage() {
   const router = useRouter()
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+  const libraryInputRef = useRef<HTMLInputElement>(null)
 
   const [state, setState] = useState<PageState>('idle')
   const [items, setItems] = useState<EditableItem[]>([])
@@ -32,6 +33,11 @@ export default function NewSplitPage() {
 
   const calculatedSubtotal = items.reduce((sum, item) => sum + item.price, 0)
   const calculatedTotal = calculatedSubtotal + tax + tip
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) handleFileSelect(file)
+  }
 
   const handleFileSelect = useCallback(async (file: File) => {
     setState('loading')
@@ -63,15 +69,6 @@ export default function NewSplitPage() {
       setState('error')
     }
   }, [])
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault()
-      const file = e.dataTransfer.files[0]
-      if (file) handleFileSelect(file)
-    },
-    [handleFileSelect]
-  )
 
   const updateItemPrice = (index: number, value: string) => {
     setItems((prev) => prev.map((item, i) => i === index ? { ...item, price: parseFloat(value) || 0 } : item))
@@ -142,63 +139,64 @@ export default function NewSplitPage() {
   if (state === 'idle') {
     return (
       <main className="min-h-screen bg-white">
-        <header className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '0.5px solid #f0f0f0' }}>
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: '#f5f5f5' }}>
-              <span className="text-sm">←</span>
-            </Link>
-            <div>
-              <p className="text-[16px] font-semibold" style={{ letterSpacing: '-0.3px' }}>Scan receipt</p>
-              <p className="text-xs" style={{ color: '#999' }}>Photo or upload</p>
-            </div>
+        <header className="flex items-center gap-3 px-5 py-3.5" style={{ borderBottom: '0.5px solid #f0f0f0' }}>
+          <Link href="/" className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: '#f5f5f5' }}>
+            <span className="text-sm">←</span>
+          </Link>
+          <div>
+            <p className="text-[16px] font-semibold" style={{ letterSpacing: '-0.3px' }}>Scan receipt</p>
+            <p className="text-xs" style={{ color: '#999' }}>Photo or upload</p>
           </div>
-          <Link href="/history" className="text-xs" style={{ color: '#888' }}>Past splits →</Link>
         </header>
 
-        <div className="px-5 pt-6">
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDrop}
-            className="flex h-[220px] cursor-pointer flex-col items-center justify-center rounded-[20px]"
-            style={{ border: '1.5px dashed #e0e0e0', background: '#fafafa' }}
-          >
-            <div className="flex h-[52px] w-[52px] items-center justify-center rounded-[14px] bg-black text-2xl">
-              📷
+        <div className="mx-5 mt-5">
+          <div className="overflow-hidden rounded-2xl border border-dashed border-gray-200">
+            {/* Camera option */}
+            <button
+              onClick={() => cameraInputRef.current?.click()}
+              className="flex w-full items-center gap-4 p-5 transition-colors active:bg-gray-50"
+            >
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-black text-2xl">
+                📷
+              </div>
+              <div className="text-left">
+                <div className="text-[15px] font-semibold text-black">Take a photo</div>
+                <div className="mt-0.5 text-xs text-gray-400">Point at a receipt right now</div>
+              </div>
+              <div className="ml-auto text-lg text-gray-300">›</div>
+            </button>
+
+            {/* Divider */}
+            <div className="flex items-center gap-3 px-5">
+              <div className="h-px flex-1 bg-gray-100"></div>
+              <span className="text-[11px] font-medium text-gray-300">or</span>
+              <div className="h-px flex-1 bg-gray-100"></div>
             </div>
-            <p className="mt-3 text-[15px] font-semibold text-black">Take a photo</p>
-            <p className="mt-1 text-xs" style={{ color: '#bbb' }}>or drag and drop</p>
-          </div>
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) handleFileSelect(file)
-            }}
-          />
-
-          <div className="mt-5 flex flex-wrap justify-center gap-1.5">
-            {['Crumpled receipts', 'Foreign receipts', 'Dark photos'].map((label) => (
-              <span
-                key={label}
-                className="rounded-[20px] px-2.5 py-1 text-[11px]"
-                style={{ background: '#f5f5f5', color: '#888' }}
-              >
-                {label}
-              </span>
-            ))}
-          </div>
-
-          <div className="mt-8 text-center">
-            <button onClick={() => alert('Coming soon!')} className="text-xs underline" style={{ color: '#bbb' }}>
-              Enter items manually instead →
+            {/* Library option */}
+            <button
+              onClick={() => libraryInputRef.current?.click()}
+              className="flex w-full items-center gap-4 p-5 transition-colors active:bg-gray-50"
+            >
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-2xl">
+                🖼️
+              </div>
+              <div className="text-left">
+                <div className="text-[15px] font-semibold text-black">Photo library</div>
+                <div className="mt-0.5 text-xs text-gray-400">Pick a saved receipt photo</div>
+              </div>
+              <div className="ml-auto text-lg text-gray-300">›</div>
             </button>
           </div>
+        </div>
+
+        <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleInputChange} />
+        <input ref={libraryInputRef} type="file" accept="image/*" className="hidden" onChange={handleInputChange} />
+
+        <div className="mt-8 text-center">
+          <button onClick={() => alert('Coming soon!')} className="text-xs underline" style={{ color: '#bbb' }}>
+            Enter items manually instead →
+          </button>
         </div>
       </main>
     )
