@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { formatCurrency, saveSplitToHistory } from '@/lib/utils'
 import { toast } from '@/components/Toast'
+import ProgressBar from '@/components/ProgressBar'
 import { ParsedReceipt } from '@/lib/types'
 
 type PageState = 'idle' | 'loading' | 'review' | 'error'
@@ -190,14 +191,16 @@ export default function NewSplitPage() {
           </Link>
           <div>
             <p className="text-[16px] font-semibold" style={{ letterSpacing: '-0.3px' }}>Scan receipt</p>
-            <p className="text-xs" style={{ color: '#999' }}>Photo or upload</p>
+            <p className="text-[11px] text-gray-400">Step 1 of 3</p>
           </div>
         </header>
 
-        <div className="px-5 pb-3 pt-6">
-          <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#ccc' }}>Step 1</p>
-          <h2 className="text-[22px] font-bold tracking-tight text-black">Add your receipt</h2>
-          <p className="mt-1 text-[13px]" style={{ color: '#999' }}>Take a photo or choose from your library</p>
+        <ProgressBar step={1} total={3} />
+
+        <div className="px-5 pt-4 pb-3">
+          <p className="text-[11px] font-bold text-gray-300 uppercase tracking-widest mb-1">Step 1 of 3</p>
+          <h2 className="text-[22px] font-black text-black tracking-tight">Add your receipt</h2>
+          <p className="text-[13px] text-gray-400 mt-1">Take a photo or choose from your library</p>
         </div>
 
         <div className="mx-5 mt-2">
@@ -234,11 +237,14 @@ export default function NewSplitPage() {
           </div>
         </div>
 
-        <div className="mx-5 mt-4 rounded-2xl p-4" style={{ background: '#f9f9f9' }}>
-          <p className="text-xs font-semibold text-black">Works with any receipt</p>
-          <p className="mt-1 text-xs leading-relaxed" style={{ color: '#999' }}>
-            Crumpled, dark, blurry, or foreign — our AI handles it all.
-          </p>
+        <div className="mx-5 mt-3 flex items-start gap-3 bg-gray-50 rounded-2xl p-4">
+          <span className="text-lg flex-shrink-0">✨</span>
+          <div>
+            <p className="text-[12px] font-bold text-black">Works with any receipt</p>
+            <p className="text-[11px] text-gray-400 mt-1 leading-relaxed">
+              Crumpled, dark, blurry, or in a foreign language — our AI handles it all.
+            </p>
+          </div>
         </div>
 
         <div className="mt-auto px-5 pb-6 pt-4">
@@ -260,10 +266,13 @@ export default function NewSplitPage() {
   // ─── LOADING ───
   if (state === 'loading') {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-white px-5">
+      <main className="min-h-screen bg-white">
+        <ProgressBar step={1} total={3} />
+        <div className="flex flex-col items-center justify-center px-5" style={{ minHeight: 'calc(100vh - 20px)' }}>
         <div className="h-[60px] w-[60px] animate-pulse rounded-full bg-black" />
         <p className="mt-4 text-[16px] font-semibold">Reading your receipt...</p>
         <p className="mt-2 text-[13px]" style={{ color: '#999' }}>This takes about 5 seconds</p>
+        </div>
       </main>
     )
   }
@@ -305,9 +314,11 @@ export default function NewSplitPage() {
         </Link>
         <div>
           <p className="text-[16px] font-semibold" style={{ letterSpacing: '-0.3px' }}>Review receipt</p>
-          <p className="text-xs" style={{ color: '#999' }}>{restaurantName || 'Your receipt'}</p>
+          <p className="text-[11px] text-gray-400">Step 2 of 3 · Review items</p>
         </div>
       </header>
+
+      <ProgressBar step={2} total={3} />
 
       <div className="px-5 pt-5">
         <p className="text-[11px] font-semibold uppercase" style={{ color: '#bbb', letterSpacing: '0.08em' }}>Items</p>

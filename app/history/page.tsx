@@ -77,12 +77,15 @@ export default function HistoryPage() {
   return (
     <main className="min-h-screen bg-white">
       {/* Header */}
-      <header className="flex items-center gap-3 px-5 py-3.5" style={{ borderBottom: '0.5px solid #f0f0f0' }}>
-        <Link href="/" className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: '#f5f5f5' }}>
-          <span className="text-sm">←</span>
+      <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-gray-50">
+        <div className="flex items-center gap-3">
+          <Link href="/" className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-[14px]">←</Link>
+          <p className="text-[16px] font-black text-black tracking-tight">Past splits</p>
+        </div>
+        <Link href="/split/new" className="bg-black text-white rounded-full px-4 py-2 text-[12px] font-bold">
+          + New split
         </Link>
-        <p className="text-[16px] font-semibold" style={{ letterSpacing: '-0.3px' }}>Past splits</p>
-      </header>
+      </div>
 
       <div className="px-5 pt-4">
         {/* Tabs */}
@@ -109,15 +112,17 @@ export default function HistoryPage() {
         {tab === 'splits' && (
           <>
             {splits.length === 0 ? (
-              <div className="mt-20 flex flex-col items-center text-center">
-                <span className="text-6xl">🧾</span>
-                <h2 className="mt-5 text-[18px] font-semibold text-black">No splits yet</h2>
-                <p className="mt-2 max-w-[240px] text-[13px]" style={{ color: '#999' }}>
-                  Your past splits will show up here
+              <div className="flex flex-col items-center justify-center px-8 pt-20 pb-10 text-center">
+                <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-3xl mb-5">
+                  🧾
+                </div>
+                <p className="text-[18px] font-black text-black tracking-tight mb-2">No splits yet</p>
+                <p className="text-[13px] text-gray-400 leading-relaxed mb-8">
+                  Your past splits will show up here after you scan your first receipt.
                 </p>
                 <Link
                   href="/split/new"
-                  className="mt-6 block rounded-[14px] bg-black px-8 py-[15px] text-[15px] font-semibold text-white"
+                  className="flex items-center gap-2 bg-black text-white rounded-2xl px-6 py-4 text-[14px] font-bold active:scale-[0.98] transition-transform"
                 >
                   Scan a receipt →
                 </Link>

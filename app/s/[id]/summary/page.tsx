@@ -7,6 +7,7 @@ import html2canvas from 'html2canvas'
 import { formatCurrency, calculatePersonTotals, getInitials } from '@/lib/utils'
 import { toast } from '@/components/Toast'
 import { Split, ReceiptItem, Person, Assignment, PersonTotal } from '@/lib/types'
+import ProgressBar from '@/components/ProgressBar'
 import PaymentButton from '@/components/PaymentButton'
 import ShareCard from '@/components/ShareCard'
 import NudgeModal from '@/components/NudgeModal'
@@ -137,20 +138,26 @@ export default function SummaryPage() {
   return (
     <main className="min-h-screen bg-white pb-32">
       {/* Header */}
-      <header className="flex items-center gap-3 px-5 py-3.5" style={{ borderBottom: '0.5px solid #f0f0f0' }}>
-        <Link href={`/s/${splitId}`} className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: '#f5f5f5' }}>
-          <span className="text-sm">←</span>
-        </Link>
-        <div>
-          <p className="text-[16px] font-semibold" style={{ letterSpacing: '-0.3px' }}>
-            {split.restaurant_name || 'Your split'}
-          </p>
-          <p className="text-xs" style={{ color: '#999' }}>{formattedDate}</p>
+      <div className="flex items-center justify-between px-5 py-3 border-b border-gray-50">
+        <div className="flex items-center gap-3">
+          <Link href={`/s/${splitId}`} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-[14px]">←</Link>
+          <div>
+            <p className="text-[15px] font-bold text-black">{split.restaurant_name || 'Your split'}</p>
+            <p className="text-[11px] text-gray-400">{formattedDate}</p>
+          </div>
         </div>
-      </header>
+        <Link href={`/s/${splitId}`} className="text-[12px] text-gray-400 font-medium">
+          Edit →
+        </Link>
+      </div>
+
+      <ProgressBar step={3} total={3} />
 
       {/* Total banner */}
-      <div className="mx-5 mt-4 rounded-[20px] bg-black p-5">
+      <div className="mx-5 mt-4 relative overflow-hidden rounded-[20px] bg-black p-5">
+        <div className="absolute top-4 right-4 bg-white/10 rounded-xl px-3 py-1.5">
+          <span className="text-[11px] font-bold text-gray-400">✓ Complete</span>
+        </div>
         <p className="text-xs" style={{ color: '#888' }}>Total bill</p>
         <p className="mt-1 text-[36px] font-bold text-white" style={{ letterSpacing: '-1px' }}>
           {formatCurrency(split.total, currency)}
@@ -315,9 +322,10 @@ export default function SummaryPage() {
       <div className="mt-8 px-5">
         <Link
           href="/split/new"
-          className="block w-full rounded-[14px] bg-black py-[15px] text-center text-[15px] font-semibold text-white"
+          className="flex items-center justify-between w-full bg-black text-white rounded-2xl px-5 py-4 text-[15px] font-bold active:scale-[0.98] transition-transform"
         >
-          Start a new split →
+          <span>Start a new split</span>
+          <span>→</span>
         </Link>
       </div>
 

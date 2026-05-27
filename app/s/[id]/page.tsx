@@ -6,6 +6,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { formatCurrency, getAvatarColor, getInitials, calculatePersonTotals, saveSplitToHistory, getRecentPeople, savePersonToHistory } from '@/lib/utils'
 import { Split, ReceiptItem, Person, Assignment } from '@/lib/types'
 import { toast } from '@/components/Toast'
+import ProgressBar from '@/components/ProgressBar'
 
 export default function AssignPage() {
   const router = useRouter()
@@ -187,13 +188,15 @@ export default function AssignPage() {
             <p className="text-[16px] font-semibold" style={{ letterSpacing: '-0.3px' }}>
               {split.restaurant_name || 'Your split'}
             </p>
-            <p className="text-xs" style={{ color: '#999' }}>Tap items to assign</p>
+            <p className="text-[11px] text-gray-400">Step 2 of 3 · Assign items</p>
           </div>
         </div>
         <button onClick={copyShareLink} className="text-xs" style={{ color: '#888' }}>
           {copiedLink ? 'Copied!' : 'Share 🔗'}
         </button>
       </header>
+
+      <ProgressBar step={2} total={3} />
 
       {/* People */}
       <div className="no-scrollbar flex items-start gap-3 overflow-x-auto px-5 py-4">
@@ -293,6 +296,23 @@ export default function AssignPage() {
         <p className="px-5 text-xs" style={{ color: '#bbb' }}>Add people to get started</p>
       )}
 
+      {/* Guest link banner */}
+      <div className="mx-5 mb-3">
+        <div className="flex items-center gap-3 rounded-2xl bg-blue-50 p-4">
+          <span className="flex-shrink-0 text-xl">🔗</span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px] font-bold text-blue-700">Invite friends — no app needed</p>
+            <p className="mt-0.5 text-[11px] text-blue-400">They tap a link to pick their own items</p>
+          </div>
+          <button
+            onClick={copyShareLink}
+            className="flex-shrink-0 rounded-xl bg-blue-600 px-3 py-2 text-[11px] font-bold text-white transition-transform active:scale-95"
+          >
+            Share
+          </button>
+        </div>
+      </div>
+
       {/* Birthday mode */}
       <div className="mx-5 flex items-center justify-between py-3">
         <div className="flex items-center gap-2">
@@ -373,13 +393,17 @@ export default function AssignPage() {
             ))}
           </div>
         )}
-        <p className="mb-2 text-center text-xs" style={{ color: allAssigned ? '#34c759' : '#999' }}>
+        <p className={`mb-2 text-center text-xs ${allAssigned ? 'font-semibold text-green-500' : ''}`} style={allAssigned ? {} : { color: '#999' }}>
           {allAssigned ? 'All items assigned ✓' : `${assignedCount} of ${items.length} items assigned`}
         </p>
         <button
           onClick={handleComplete}
           disabled={!allAssigned || completing}
-          className="w-full rounded-[14px] bg-black py-[15px] text-[15px] font-semibold text-white disabled:opacity-[0.35]"
+          className={`w-full rounded-2xl py-[15px] text-[15px] font-bold transition-all ${
+            !allAssigned || completing
+              ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
+              : 'bg-black text-white active:scale-[0.98]'
+          }`}
         >
           {completing ? (
             <span className="inline-flex items-center gap-2">
