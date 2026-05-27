@@ -249,7 +249,7 @@ export default function NewSplitPage() {
 
         <div className="mt-auto px-5 pb-6 pt-4">
           <button
-            onClick={() => alert('Manual entry coming soon!')}
+            onClick={() => router.push('/split/manual')}
             className="w-full py-2 text-center text-[13px]"
             style={{ color: '#999' }}
           >
@@ -294,7 +294,7 @@ export default function NewSplitPage() {
             Try again
           </button>
           <button
-            onClick={() => alert('Manual entry coming soon!')}
+            onClick={() => router.push('/split/manual')}
             className="w-full rounded-[14px] py-[14px] text-[15px] font-medium text-black"
             style={{ background: '#f5f5f5' }}
           >

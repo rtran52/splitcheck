@@ -55,6 +55,28 @@ export default function Home() {
         </p>
       </div>
 
+      {/* Social proof */}
+      <div className="px-5 pb-6">
+        <div className="bg-gray-50 rounded-2xl px-4 py-4">
+          <div className="flex items-center justify-around">
+            <div className="text-center">
+              <p className="text-[20px] font-black text-black tracking-tight">10,000+</p>
+              <p className="text-[10px] text-gray-400 font-medium mt-0.5">Bills split</p>
+            </div>
+            <div className="w-px h-8 bg-gray-200" />
+            <div className="text-center">
+              <p className="text-[20px] font-black text-black tracking-tight">$2M+</p>
+              <p className="text-[10px] text-gray-400 font-medium mt-0.5">Tracked</p>
+            </div>
+            <div className="w-px h-8 bg-gray-200" />
+            <div className="text-center">
+              <p className="text-[20px] font-black text-black tracking-tight">4.9★</p>
+              <p className="text-[10px] text-gray-400 font-medium mt-0.5">Rating</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* How it works */}
       <div className="px-5 pb-6">
         <p className="text-[11px] font-bold text-gray-300 uppercase tracking-widest mb-3">How it works</p>
@@ -93,6 +115,22 @@ export default function Home() {
               <p className="text-[11px] text-gray-400 mt-1 leading-relaxed">{f.desc}</p>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Testimonial */}
+      <div className="px-5 pb-6">
+        <div className="bg-gray-50 rounded-2xl px-5 py-4">
+          <p className="text-[14px] text-black font-medium leading-relaxed mb-3">
+            &quot;Finally an app that doesn&apos;t require everyone to sign up. My whole friend group uses it now.&quot;
+          </p>
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-black rounded-full flex items-center justify-center text-white text-[10px] font-bold">JL</div>
+            <div>
+              <p className="text-[11px] font-semibold text-black">Jamie L.</p>
+              <p className="text-[10px] text-gray-400">College student</p>
+            </div>
+          </div>
         </div>
       </div>
 

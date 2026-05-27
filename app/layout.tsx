@@ -23,6 +23,10 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
     title: 'SplitCheck',
   },
+  icons: {
+    icon: '/icon',
+    apple: '/apple-icon',
+  },
 };
 
 export const viewport: Viewport = {
